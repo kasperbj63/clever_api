@@ -105,6 +105,36 @@ class CleverClient:
         """Read Clever Power agreements, including their meter identifiers."""
         return await self._clever_data("GET", "powerconsumption/powerEngagements")
 
+    async def get_electricity_prices(
+        self, address_id: str, start_date: date, end_date: date
+    ) -> dict[str, Any]:
+        """Read app prices for a delivery address, without changing charging."""
+        if not address_id.strip():
+            raise ValueError("A delivery address identifier is required")
+        if type(start_date) is not date or type(end_date) is not date:
+            raise TypeError("Price dates must be calendar dates")
+        if end_date < start_date:
+            raise ValueError("Price end date precedes start date")
+        return await self._clever_data(
+            "GET", "electricity-pricing/app-price",
+            params={"darReferenceId": address_id, "from": start_date.isoformat(),
+                    "to": end_date.isoformat()},
+        )
+
+    async def get_historical_energy_surcharges(
+        self, start_date: date, end_date: date
+    ) -> list[dict[str, Any]]:
+        """Read published monthly rates; not an estimated current-month rate."""
+        if type(start_date) is not date or type(end_date) is not date:
+            raise TypeError("Surcharge dates must be calendar dates")
+        if end_date < start_date:
+            raise ValueError("Surcharge end date precedes start date")
+        return await self._clever_data(
+            "GET", "energysurcharge/historical",
+            params={"startYear": start_date.year, "startMonth": start_date.month,
+                    "endYear": end_date.year, "endMonth": end_date.month},
+        )
+
     async def get_power_consumption(
         self,
         meter_id: str,
