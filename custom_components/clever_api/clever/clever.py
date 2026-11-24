@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import time
+from datetime import date
+from typing import Literal
 from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote
@@ -98,6 +100,35 @@ class CleverClient:
 
     async def get_profile(self) -> dict[str, Any]:
         return await self._clever_data("GET", "profiles/get-profile")
+
+    async def get_power_engagements(self) -> list[dict[str, Any]]:
+        """Read Clever Power agreements, including their meter identifiers."""
+        return await self._clever_data("GET", "powerconsumption/powerEngagements")
+
+    async def get_power_consumption(
+        self,
+        meter_id: str,
+        start_date: date,
+        period: Literal["daily", "monthly", "yearly"] = "daily",
+    ) -> dict[str, Any]:
+        """Read electricity-meter and charger energy, without charging controls.
+
+        ``start_date`` is a calendar date, not a UTC timestamp. The response's
+        totalPowerMeterkWh includes charging; subtract totalChargePointkWh to
+        obtain household energy excluding the charger.
+        """
+        if period not in ("daily", "monthly", "yearly"):
+            raise ValueError("Unsupported power consumption period")
+        if not meter_id or not meter_id.strip():
+            raise ValueError("A meter identifier is required")
+        # Reject datetime subclasses: isoformat must never add time or offset.
+        if type(start_date) is not date:
+            raise TypeError("start_date must be a calendar date")
+        return await self._clever_data(
+            "GET",
+            f"powerconsumption/{period}/gsnr/{quote(meter_id, safe='')}",
+            params={"startDate": start_date.isoformat()},
+        )
 
     async def get_installations(self) -> list[dict[str, Any]]:
         return await self._clever_data("GET", "installations")

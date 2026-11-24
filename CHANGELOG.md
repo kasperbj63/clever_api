@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Add read-only client methods for Clever Power agreements and daily, monthly
+  and yearly main-meter/charger consumption. Document calendar dates and the
+  distinction between total metered energy and household-only consumption.
+- Add independent six-hour polling for active electricity meters, monthly and
+  latest-published-day household sensors, with timestamped chart attributes.
+  Missing current-month data remains unknown; the most recent available day's
+  date is explicit. Failures do not mark charging entities unavailable.
+- Add offline tests for GET-only access, date formatting, meter path escaping
+  and parameter validation. No charging behavior changes.
+
 ## 0.4.0 (2026-08-24)
 ---
  - Expose active charging, vehicle connection, target energy, progress, duration, average power, expected completion, and vehicle battery level.
